@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Campus Map</title>
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDq0VhxE2OAwKGomc1uzF6PW7sgkU_R71o&callback=initMap" async defer loading="async"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key }}&callback=initMap" async defer loading="async"></script>
     <style>
         #map { height: 80vh; width: 100%; }
         #controls { margin-top: 10px; }
@@ -22,20 +22,16 @@
     </div>
 
     <script>
-        const marker = new google.maps.marker.AdvancedMarkerElement({
-        position: currentLocation,
-        map: map,
-        title: "Your Location",
-    });
-
         let map, currentLocation = {};
+        let markers = [];
 
         function initMap() {
             map = new google.maps.Map(document.getElementById("map"), {
-                zoom: 16,
-                mapTypeId: "roadmap",
+                zoom: 21,  // Maximum zoom level
+                mapTypeId: "satellite",
             });
-            // Try to get user's current location
+
+            // Get user's current location
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
                     position => {
@@ -44,7 +40,8 @@
                             lng: position.coords.longitude
                         };
                         map.setCenter(currentLocation);
-                        marker = new google.maps.Marker({
+                        // Add a marker for current location
+                        new google.maps.Marker({
                             position: currentLocation,
                             map: map,
                             title: "Your Location",
@@ -59,28 +56,33 @@
         }
 
         function saveLocation() {
+            // Show the form to enter location details
             document.getElementById("locationForm").style.display = "block";
         }
 
         document.getElementById("locationForm").onsubmit = async function(event) {
             event.preventDefault();
+
             const placeName = document.getElementById("placeName").value;
             const placeImage = document.getElementById("placeImage").files[0];
+
             if (placeName && placeImage && currentLocation.lat && currentLocation.lng) {
                 const formData = new FormData();
                 formData.append("name", placeName);
                 formData.append("latitude", currentLocation.lat);
                 formData.append("longitude", currentLocation.lng);
                 formData.append("image", placeImage);
-                
+
                 try {
                     const response = await fetch("{% url 'save_location' %}", {
                         method: "POST",
                         body: formData,
                         headers: { "X-CSRFToken": "{{ csrf_token }}" }
                     });
+
                     if (response.ok) {
                         alert("Location saved successfully!");
+                        addMarker(currentLocation, placeName, URL.createObjectURL(placeImage));
                         document.getElementById("locationForm").reset();
                         document.getElementById("locationForm").style.display = "none";
                     } else {
@@ -94,6 +96,31 @@
                 alert("Please enter all details.");
             }
         };
+
+        function addMarker(location, name, imageUrl) {
+            const marker = new google.maps.Marker({
+                position: location,
+                map: map,
+                title: name,
+                icon: {
+                    path: google.maps.SymbolPath.CIRCLE,
+                    scale: 8,
+                    fillColor: "#FF0000",
+                    fillOpacity: 1,
+                    strokeWeight: 1,
+                }
+            });
+
+            const infoWindow = new google.maps.InfoWindow({
+                content: `<div><strong>${name}</strong><br><img src="${imageUrl}" alt="${name}" style="width:100px;height:auto;"></div>`
+            });
+
+            marker.addListener("click", () => {
+                infoWindow.open(map, marker);
+            });
+
+            markers.push(marker);
+        }
     </script>
 </body>
 </html>
