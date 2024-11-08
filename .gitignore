@@ -1,0 +1,76 @@
+env/
+# Byte-compiled files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Django-specific
+*.log
+db.sqlite3
+db.sqlite3-journal
+media/
+
+# If you're using PostgreSQL or other database backups
+*.dump
+*.backup
+
+# Environment variables and secrets
+.env
+*.env
+
+# Virtual environment
+venv/
+env/
+ENV/
+*.venv
+
+# macOS files
+.DS_Store
+
+# Static files
+staticfiles/
+static/
+
+# Node modules (if you have frontend dependencies in your project)
+node_modules/
+
+# Ignore compiled frontend files if using any build tools
+dist/
+build/
+
+# Ignore Google Maps API key file (if you store it separately)
+google_maps_api_key.json
+
+# Ignore IDE-specific files
+.idea/
+.vscode/
+
+# Ignore any .migrations files for clean migration management
+*/migrations/*.py
+!*/migrations/__init__.py
+
+# Ignore coverage, testing, and debugging files
+.coverage
+*.coverage
+coverage.xml
+htmlcov/
+__pycache__/
+*.prof
+
+# Pytest cache and testing files
+.pytest_cache/
+.tox/
+.cache/
+
+# Python egg files
+*.egg
+*.egg-info/
+.eggs/
+
+# Temporary files and backups
+*.bak
+*.swp
+*.swo
+*~
+
+# Media files (for uploaded

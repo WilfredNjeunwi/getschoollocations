@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Campus Map</title>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDq0VhxE2OAwKGomc1uzF6PW7sgkU_R71o&callback=initMap" async defer loading="async"></script>
+    <style>
+        #map { height: 80vh; width: 100%; }
+        #controls { margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <h1>Campus Map</h1>
+    <div id="map"></div>
+    <div id="controls">
+        <button onclick="saveLocation()">Save Location</button>
+        <form id="locationForm" style="display:none;">
+            <input type="text" id="placeName" placeholder="Enter place name" required>
+            <input type="file" id="placeImage" accept="image/*" required>
+            <button type="submit">Submit</button>
+        </form>
+    </div>
+
+    <script>
+        const marker = new google.maps.marker.AdvancedMarkerElement({
+        position: currentLocation,
+        map: map,
+        title: "Your Location",
+    });
+
+        let map, currentLocation = {};
+
+        function initMap() {
+            map = new google.maps.Map(document.getElementById("map"), {
+                zoom: 16,
+                mapTypeId: "roadmap",
+            });
+            // Try to get user's current location
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    position => {
+                        currentLocation = {
+                            lat: position.coords.latitude,
+                            lng: position.coords.longitude
+                        };
+                        map.setCenter(currentLocation);
+                        marker = new google.maps.Marker({
+                            position: currentLocation,
+                            map: map,
+                            title: "Your Location",
+                            icon: "http://maps.google.com/mapfiles/ms/icons/blue-dot.png"
+                        });
+                    },
+                    () => { alert("Location access denied or unavailable."); }
+                );
+            } else {
+                alert("Geolocation is not supported by this browser.");
+            }
+        }
+
+        function saveLocation() {
+            document.getElementById("locationForm").style.display = "block";
+        }
+
+        document.getElementById("locationForm").onsubmit = async function(event) {
+            event.preventDefault();
+            const placeName = document.getElementById("placeName").value;
+            const placeImage = document.getElementById("placeImage").files[0];
+            if (placeName && placeImage && currentLocation.lat && currentLocation.lng) {
+                const formData = new FormData();
+                formData.append("name", placeName);
+                formData.append("latitude", currentLocation.lat);
+                formData.append("longitude", currentLocation.lng);
+                formData.append("image", placeImage);
+                
+                try {
+                    const response = await fetch("{% url 'save_location' %}", {
+                        method: "POST",
+                        body: formData,
+                        headers: { "X-CSRFToken": "{{ csrf_token }}" }
+                    });
+                    if (response.ok) {
+                        alert("Location saved successfully!");
+                        document.getElementById("locationForm").reset();
+                        document.getElementById("locationForm").style.display = "none";
+                    } else {
+                        alert("Error saving location. Please try again.");
+                    }
+                } catch (error) {
+                    console.error("Error:", error);
+                    alert("Error saving location.");
+                }
+            } else {
+                alert("Please enter all details.");
+            }
+        };
+    </script>
+</body>
+</html>
